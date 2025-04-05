@@ -436,7 +436,7 @@ wait(uint64 addr)
 
 
 int
-waitall(uint64 n, uint64 statuses)
+waitall(uint64 n, uint64 statuses) // added
 {
   struct proc *pp;
   int havekids;

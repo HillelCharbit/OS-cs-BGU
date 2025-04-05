@@ -21,6 +21,8 @@ entry("wait");
 
 entry("waitall");
 
+entry("forkn");
+
 entry("pipe");
 entry("read");
 entry("write");

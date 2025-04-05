@@ -21,4 +21,5 @@
 #define SYS_mkdir  20
 #define SYS_close  21
 #define SYS_waitall 22 // added
+#define SYS_forkn 23 // added
 

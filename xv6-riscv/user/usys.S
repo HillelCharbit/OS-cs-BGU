@@ -20,6 +20,11 @@ waitall:
  li a7, SYS_waitall
  ecall
  ret
+.global forkn
+forkn:
+ li a7, SYS_forkn
+ ecall
+ ret
 .global pipe
 pipe:
  li a7, SYS_pipe

@@ -2,6 +2,7 @@ struct stat;
 
 // system calls
 int fork(void);
+int forkn(int n, int* pids); // added
 int exit(int) __attribute__((noreturn));
 int wait(int*);
 int waitall(int*, int* statuses); // added
