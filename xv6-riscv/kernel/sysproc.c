@@ -5,7 +5,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
-
+// added comment commit check
 uint64
 sys_exit(void)
 {
