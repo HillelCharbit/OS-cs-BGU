@@ -27,50 +27,16 @@ sys_fork(void)
   return fork();
 }
 
-#define MAX_CHILDREN 16
-
 uint64 
-sys_forkn(void) 
+sys_forkn(void) // added
 {
     int n;
     uint64 pids;  // Userspace pointer for child PIDs
     argint(0, &n);
     argaddr(1, &pids);
-    // if (n != 0 || pids != 0) {
-    //     return -1; // Invalid arguments
-    // }
-
-    if (n < 1 || n > MAX_CHILDREN) {
-        return -1; // Restrict range of child processes
-    }
-
-    int created = 0;
-    int child_pids[MAX_CHILDREN];
-
-    // Fork n child processes
-    for (int i = 0; i < n; i++) {
-        int pid = fork();
-        if (pid < 0) {
-            // Cleanup: Kill already created processes
-            for (int j = 0; j < created; j++) {
-                kill(child_pids[j]);
-            }
-            return -1;  // Indicate failure
-        } else if (pid == 0) {
-            return i + 1;  // Child returns its index (1-based)
-        }
-        child_pids[created++] = pid;
-    }
-
-    // Copy child PIDs to userspace
-    if (copyout(myproc()->pagetable, pids, (char *)child_pids, sizeof(int) * n) < 0) {
-        return -1;
-    }
-
-    return 0; // Success, parent returns 0
-}
-
-
+   
+   return forkn(n, pids);
+  }
 uint64
 sys_wait(void)
 {

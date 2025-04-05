@@ -325,6 +325,40 @@ fork(void)
   return pid;
 }
 
+#define MAX_CHILDREN 16
+
+int forkn(int n, uint64 pids){ // added
+
+  if (n < 1 || n > MAX_CHILDREN) {
+    return -1; // Restrict range of child processes
+}
+
+int created = 0;
+int child_pids[MAX_CHILDREN];
+
+// Fork n child processes
+for (int i = 0; i < n; i++) {
+    int pid = fork();
+    if (pid < 0) {
+        // Cleanup: Kill already created processes
+        for (int j = 0; j < created; j++) {
+            kill(child_pids[j]);
+        }
+        return -1;  // Indicate failure
+    } else if (pid == 0) {
+        return i + 1;  // Child returns its index (1-based)
+    }
+    child_pids[created++] = pid;
+}
+
+// Copy child PIDs to userspace
+if (copyout(myproc()->pagetable, pids, (char *)child_pids, sizeof(int) * n) < 0) {
+    return -1;
+}
+
+return 0; // Success, parent returns 0
+}
+
 // Pass p's abandoned children to init.
 // Caller must hold wait_lock.
 void
