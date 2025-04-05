@@ -434,6 +434,99 @@ wait(uint64 addr)
   }
 }
 
+
+int
+waitall(uint64 n, uint64 statuses)
+{
+  struct proc *pp;
+  int havekids;
+  struct proc *p = myproc();
+  int count = 0;
+  int local_statuses[NPROC]; // Local array to store statuses
+
+  // Check if arguments are valid
+  if(n == 0 || statuses == 0)
+    return -1;
+
+  acquire(&wait_lock);
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    count = 0;
+    
+    // First pass: Count all children and check if any are still running
+    for(pp = proc; pp < &proc[NPROC]; pp++){
+      if(pp->parent == p){
+        havekids = 1;
+        if(pp->state == ZOMBIE){
+          // Store exit status in our local array
+          local_statuses[count] = pp->xstate;
+          count++;
+        } else {
+          // Found a child that's not a zombie yet, need to wait
+          break;
+        }
+      }
+    }
+    
+    // If we have no children at all
+    if(!havekids){
+      // No children found, set n to 0 and return 0
+      if(copyout(p->pagetable, (uint64)n, (char *)&count, sizeof(int)) < 0){
+        release(&wait_lock);
+        return -1;
+      }
+      release(&wait_lock);
+      return 0;
+    }
+    
+    // Check if we found all children as zombies (complete count)
+    int all_zombies = 1;
+    for(pp = proc; pp < &proc[NPROC]; pp++){
+      if(pp->parent == p && pp->state != ZOMBIE){
+        all_zombies = 0;
+        break;
+      }
+    }
+    
+    // If all children are zombies, free them and return
+    if(all_zombies){
+      // Copy count to user space
+      if(copyout(p->pagetable, (uint64)n, (char *)&count, sizeof(int)) < 0){
+        release(&wait_lock);
+        return -1;
+      }
+      
+      // Copy statuses to user space
+      if(copyout(p->pagetable, (uint64)statuses, (char *)local_statuses, 
+                count * sizeof(int)) < 0){
+        release(&wait_lock);
+        return -1;
+      }
+      
+      // Free all zombie children
+      for(pp = proc; pp < &proc[NPROC]; pp++){
+        if(pp->parent == p && pp->state == ZOMBIE){
+          acquire(&pp->lock);
+          freeproc(pp);
+          release(&pp->lock);
+        }
+      }
+      
+      release(&wait_lock);
+      return 0;
+    }
+    
+    // Wait for a child to exit, if we have active children
+    if(killed(p)){
+      release(&wait_lock);
+      return -1;
+    }
+    sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
+}
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:

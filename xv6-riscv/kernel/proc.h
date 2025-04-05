@@ -18,6 +18,8 @@ struct context {
   uint64 s11;
 };
 
+int waitall(uint64 n, uint64 statuses);
+
 // Per-CPU state.
 struct cpu {
   struct proc *proc;          // The process running on this cpu, or null.

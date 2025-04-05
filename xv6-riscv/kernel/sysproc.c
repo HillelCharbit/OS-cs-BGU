@@ -36,6 +36,18 @@ sys_wait(void)
 }
 
 uint64
+sys_waitall(void) // added
+{
+  uint64 p; 
+  uint64 statuses; 
+  
+  argaddr(0, &p);
+  argaddr(1, &statuses);
+  
+  return waitall(p ,statuses);
+}
+
+uint64
 sys_sbrk(void)
 {
   uint64 addr;
